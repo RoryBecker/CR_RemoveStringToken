@@ -7,13 +7,13 @@ This CodeProvider allows the user to remove a String Token from a string, along 
 
 ###Example Usage
 
- * Starting with...
+Starting with...
 
 	var MyString = String.Format("Hello {0}", "World");
 
  * Place the caret within **{0}**
  * Choose '**Remove String Token**' from the CodeRush Smart Tag menu.
 
-CR_RemoveStringToken will alter the above example to...
+CodeRush will alter the above example to...
 
 	var MyString = String.Format("Hello World");
