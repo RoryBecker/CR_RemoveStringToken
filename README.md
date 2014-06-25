@@ -3,7 +3,7 @@ CR_RemoveStringToken
 
 This plugin adds a new CodeProvider '**Remove String Token**' 
 
-This CodeProvider allows the user to remove a String Token from a string, along with it's associated parameter.
+This CodeProvider allows the user to remove a String Token from a string, along with it's associated argument.
 
 ###Example Usage
 
