@@ -55,14 +55,34 @@ namespace CR_RemoveStringToken
                 return;
 
             // If not in method call
-            if (ThePrimitive.Parent.ElementType != LanguageElementType.MethodCallExpression)
+            if (!(WithinStringFormat(ThePrimitive) || WithinConsoleWriteLine(ThePrimitive)))
                 return;
+
+            ea.Available = true;
+        }
+        private bool WithinStringFormat(PrimitiveExpression ThePrimitive)
+        {
+            if (ThePrimitive.Parent.ElementType != LanguageElementType.MethodCallExpression)
+                return false;
             MethodCallExpression MCE = (MethodCallExpression)ThePrimitive.Parent;
             MethodReferenceExpression MRE = (MethodReferenceExpression)MCE.Nodes[0];
 
             if (MRE.Name != "Format" || MRE.Qualifier.Name.ToLower() != "string")
-                return;
-            ea.Available = true;
+                return false;
+
+            return true;
+        }
+        private bool WithinConsoleWriteLine(PrimitiveExpression ThePrimitive)
+        {
+            if (ThePrimitive.Parent.ElementType != LanguageElementType.MethodCall)
+                return false;
+            MethodCall MC = (MethodCall)ThePrimitive.Parent;
+            MethodReferenceExpression MRE = (MethodReferenceExpression)MC.Nodes[0];
+
+            if (MRE.Name.ToLower() != "writeline" || MRE.Qualifier.Name.ToLower() != "console")
+                return false;
+
+            return true;
         }
         private string GetTokenNearCaret(PrimitiveExpression activeString)
         {
@@ -110,7 +130,7 @@ namespace CR_RemoveStringToken
                 SourceRange PrimitiveNameRange = ThePrimitive.NameRange;
                 string text = ThePrimitive.Name;
                 string token = GetTokenNearCaret(ThePrimitive);
-                MethodCallExpression MCE = (MethodCallExpression)ThePrimitive.Parent;
+                IHasArguments MCE = (IHasArguments)ThePrimitive.Parent;
 
 
                 int tokenOffset = CodeRush.Caret.SourcePoint.Offset - ThePrimitive.Range.Start.Offset; // text.IndexOf(token);
@@ -142,17 +162,13 @@ namespace CR_RemoveStringToken
                             text = text.Replace("{" + (tokenIndex + 1) + "}", "{" + (tokenIndex) + "}");
                         }
                     MCE.Arguments.RemoveAt(tokenID + 1);
-                    ea.TextDocument.SetText(MCE.Range, CodeRush.CodeMod.GenerateCode(MCE));
+                    var MCEAsLang = (LanguageElement)MCE;
+                    ea.TextDocument.SetText(MCEAsLang.Range, CodeRush.CodeMod.GenerateCode(MCEAsLang));
                 }
 
                 // Write string back over original string.
                 ea.TextDocument.SetText(PrimitiveNameRange, text);
             }
-
-                       
         }
-
-
-
     }
 }
