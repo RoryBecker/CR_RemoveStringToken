@@ -127,7 +127,11 @@ namespace CR_RemoveStringToken
             using (ea.TextDocument.NewCompoundAction("Remove string Token"))
             {
                 PrimitiveExpression ThePrimitive = (PrimitiveExpression)CodeRush.Source.GetNodeAt(CodeRush.Caret.SourcePoint);
-                SourceRange PrimitiveNameRange = ThePrimitive.NameRange;
+                SourceRange ReplaceRange = ThePrimitive.NameRange;
+                if (WithinStringFormat(ThePrimitive))
+                {
+                    ReplaceRange = ((MethodCallExpression)ThePrimitive.Parent).Range;
+                }
                 string text = ThePrimitive.Name;
                 string token = GetTokenNearCaret(ThePrimitive);
                 IHasArguments MCE = (IHasArguments)ThePrimitive.Parent;
@@ -157,17 +161,21 @@ namespace CR_RemoveStringToken
                     // Renumber Remaining Tokens
                     // Renumber {3} -> {Highest} with {2} -> {Highest-1}
                     if (HigherTokenNumbers.Count() > 0)
-                        for (int tokenIndex = tokenID; tokenIndex < HigherTokenNumbers.First(); tokenIndex++)
+                    {
+                        int HigherTokensCapture = HigherTokenNumbers.Last();
+                        for (int tokenIndex = tokenID; tokenIndex < HigherTokensCapture; tokenIndex++)
                         {
                             text = text.Replace("{" + (tokenIndex + 1) + "}", "{" + (tokenIndex) + "}");
                         }
+                    }
+                    
                     MCE.Arguments.RemoveAt(tokenID + 1);
                     var MCEAsLang = (LanguageElement)MCE;
                     ea.TextDocument.SetText(MCEAsLang.Range, CodeRush.CodeMod.GenerateCode(MCEAsLang));
                 }
 
                 // Write string back over original string.
-                ea.TextDocument.SetText(PrimitiveNameRange, text);
+                ea.TextDocument.SetText(ReplaceRange, text);
             }
         }
     }
