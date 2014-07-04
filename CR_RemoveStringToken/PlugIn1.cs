@@ -128,9 +128,10 @@ namespace CR_RemoveStringToken
             {
                 PrimitiveExpression ThePrimitive = (PrimitiveExpression)CodeRush.Source.GetNodeAt(CodeRush.Caret.SourcePoint);
                 SourceRange ReplaceRange = ThePrimitive.NameRange;
+                SourceRange StringFormatRange = SourceRange.Empty;
                 if (WithinStringFormat(ThePrimitive))
                 {
-                    ReplaceRange = ((MethodCallExpression)ThePrimitive.Parent).Range;
+                    StringFormatRange = ((MethodCallExpression)ThePrimitive.Parent).Range;
                 }
                 string text = ThePrimitive.Name;
                 string token = GetTokenNearCaret(ThePrimitive);
@@ -175,6 +176,8 @@ namespace CR_RemoveStringToken
                 }
 
                 // Write string back over original string.
+                if (!text.Contains("{") && !(StringFormatRange.IsEmpty))
+                    ReplaceRange = StringFormatRange;
                 ea.TextDocument.SetText(ReplaceRange, text);
             }
         }
